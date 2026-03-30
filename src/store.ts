@@ -159,11 +159,22 @@ export class Store {
     return this.getCronJob(Number(result.lastInsertRowid))!;
   }
 
-  /** 根据 ID 获取定时任务 */
-  getCronJob(id: number): CronJob | undefined {
-    const row = this.db
-      .prepare("SELECT * FROM cron_jobs WHERE id = ?")
-      .get(id) as Record<string, any> | undefined;
+  /** 根据 ID 获取定时任务（内部使用，不校验归属） */
+  getCronJob(id: number): CronJob | undefined;
+  /** 根据 ID + 安装实例 + 用户获取定时任务（tool handler 使用，校验归属） */
+  getCronJob(id: number, installationId: string, userId: string): CronJob | undefined;
+  getCronJob(id: number, installationId?: string, userId?: string): CronJob | undefined {
+    let row: Record<string, any> | undefined;
+    if (installationId && userId) {
+      // 带归属校验的查询
+      row = this.db
+        .prepare("SELECT * FROM cron_jobs WHERE id = ? AND installation_id = ? AND user_id = ?")
+        .get(id, installationId, userId) as Record<string, any> | undefined;
+    } else {
+      row = this.db
+        .prepare("SELECT * FROM cron_jobs WHERE id = ?")
+        .get(id) as Record<string, any> | undefined;
+    }
 
     if (!row) return undefined;
     return this.rowToCronJob(row);

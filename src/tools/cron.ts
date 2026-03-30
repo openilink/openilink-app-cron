@@ -170,8 +170,9 @@ function createHandlers(deps?: ToolModuleDeps): Map<string, ToolHandler> {
       if (job_id == null) return "错误：请提供任务 ID（job_id）";
 
       const store = getStore();
-      const job = store.getCronJob(Number(job_id));
-      if (!job || job.installationId !== ctx.installationId || job.userId !== ctx.userId) {
+      // 带归属校验的查询，防止越权操作
+      const job = store.getCronJob(Number(job_id), ctx.installationId, ctx.userId);
+      if (!job) {
         return `未找到 ID 为 ${job_id} 的任务，或该任务不属于你。`;
       }
 
@@ -206,8 +207,9 @@ function createHandlers(deps?: ToolModuleDeps): Map<string, ToolHandler> {
       if (job_id == null) return "错误：请提供任务 ID（job_id）";
 
       const store = getStore();
-      const job = store.getCronJob(Number(job_id));
-      if (!job || job.installationId !== ctx.installationId || job.userId !== ctx.userId) {
+      // 带归属校验的查询，防止越权操作
+      const job = store.getCronJob(Number(job_id), ctx.installationId, ctx.userId);
+      if (!job) {
         return `未找到 ID 为 ${job_id} 的任务，或该任务不属于你。`;
       }
 
