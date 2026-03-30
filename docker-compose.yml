@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  cron:
+    build: .
+    container_name: openilink-app-cron
+    restart: unless-stopped
+    ports:
+      - "8096:8096"
+    environment:
+      - HUB_URL=${HUB_URL}
+      - BASE_URL=${BASE_URL}
+      - DB_PATH=/data/cron.db
+      - PORT=8096
+    volumes:
+      - cron-data:/data
+
+volumes:
+  cron-data:
