@@ -89,7 +89,19 @@ export class Scheduler {
         const nextRunUnix = Math.floor(nextRunDate.getTime() / 1000);
         this.store.updateCronJobRun(job.id, nowUnix, nextRunUnix);
       } catch (err) {
-        console.error(`[scheduler] 任务 #${job.id} 执行失败:`, err);
+        console.error(`[scheduler] 任务 #${job.id}「${job.name}」执行失败:`, err);
+
+        // 发送失败时仍然更新 next_run 到下一个周期，避免无限重试
+        try {
+          const nextRunDate = getNextRun(job.cronExpr, new Date(nowUnix * 1000));
+          const nextRunUnix = Math.floor(nextRunDate.getTime() / 1000);
+          this.store.updateCronJobRun(job.id, nowUnix, nextRunUnix);
+          console.warn(
+            `[scheduler] 任务 #${job.id} 已跳过本次，下次执行: ${nextRunDate.toISOString()}`,
+          );
+        } catch (updateErr) {
+          console.error(`[scheduler] 任务 #${job.id} 更新下次执行时间也失败:`, updateErr);
+        }
       }
     }
   }
